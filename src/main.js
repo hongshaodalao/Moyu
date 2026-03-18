@@ -297,12 +297,13 @@ const loop = createLoop({
     const p = combat.player;
     renderHpBar(ctx, 18, 18, 220, 10, p.hp / p.hpMax, '#ff6b6b');
     ctx.fillStyle = 'rgba(230,240,255,0.92)';
-    ctx.font = '14px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace';
+    ctx.font = '12px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace';
     ctx.fillText(`HP ${p.hp}/${p.hpMax}`, 18, 14);
 
     // Enemy HP bar
     if (combat.enemy) {
       renderHpBar(ctx, canvas.width - 238, 18, 220, 10, combat.enemy.hp / combat.enemy.hpMax, '#6df2b0');
+      ctx.font = '12px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace';
       ctx.fillText(`${combat.enemy.hp}/${combat.enemy.hpMax}`, canvas.width - 238, 14);
     }
 

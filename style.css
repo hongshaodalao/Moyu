@@ -19,8 +19,10 @@ body{
   font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "PingFang SC", "Noto Sans CJK SC", "Microsoft Yahei", sans-serif;
 }
 
+:root{--chromeH:120px;}
+
 .layout2{
-  height:100%;
+  height: calc(100vh - var(--chromeH));
   display:grid;
   grid-template-columns: 1500px 420px;
   grid-template-rows: 800px 280px;
@@ -41,13 +43,14 @@ body{
   align-items:flex-start;
   justify-content:flex-start;
   padding:0;
+  height: calc(800px - var(--chromeH));
 }
 
 .left{display:flex; justify-content:center; align-items:stretch}
 
 #game{
   width:1500px;
-  height:800px;
+  height: calc(800px - var(--chromeH));
   border:1px solid var(--border);
   background:#000;
   image-rendering: pixelated;
@@ -58,7 +61,7 @@ body{
   grid-column:2;
   grid-row:1 / span 2;
   width:420px;
-  height:1080px;
+  height: calc(1080px - var(--chromeH));
   overflow:hidden;
   display:flex;
   flex-direction:column;
@@ -71,7 +74,7 @@ body{
   grid-column:1;
   grid-row:2;
   width:1500px;
-  height:280px;
+  height: calc(280px - var(--chromeH));
   border-top:1px solid var(--border);
   background:rgba(13,27,38,.72);
   backdrop-filter: blur(8px);
@@ -92,9 +95,17 @@ body{
 .bottomShop .shopList{overflow:hidden; min-height:0}
 .bottomShop .ownedList{display:none}
 
-@media (max-width: 1920px){
-  /* allow simple downscale if viewport smaller than target */
+/* Responsive scaling: keep everything visible when viewport smaller than target. */
+@media (max-width: 1920px), (max-height: 1080px){
   .layout2{transform-origin: top center;}
+}
+
+@media (max-width: 1920px){
+  .layout2{transform: scale(calc(100vw / 1920));}
+}
+
+@media (max-height: 1080px){
+  .layout2{transform: scale(calc((100vh - var(--chromeH)) / (1080px - var(--chromeH))));}
 }
 
 .sideSection{padding:12px 12px; border-bottom:1px solid var(--border)}
