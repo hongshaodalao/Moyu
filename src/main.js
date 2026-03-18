@@ -100,6 +100,16 @@ function closeShop() {
   ui.panel.classList.add('hidden');
 }
 
+function formatCombatBonus(b) {
+  if (!b) return '战斗：—';
+  const parts = [];
+  if (b.atk) parts.push(`攻击 +${b.atk}`);
+  if (b.def) parts.push(`防御 +${b.def}`);
+  if (b.hpMax) parts.push(`生命上限 +${b.hpMax}`);
+  if (b.atkSpeedPct) parts.push(`攻速 +${Math.round(b.atkSpeedPct * 100)}%`);
+  return `战斗：${parts.join('，') || '—'}`;
+}
+
 function renderShop() {
   const tier = computeShopTier(state.autoIncome);
   const unlocked = getUnlockedItems(shop, state.autoIncome, shopTab);
@@ -113,6 +123,10 @@ function renderShop() {
     el.className = 'card';
 
     const periodS = Math.round(state.incomePeriodMs / 100) / 10;
+    const effectText = item.kind === 'combat'
+      ? formatCombatBonus(item.combatBonus)
+      : `自动收益 +${item.incomeBonus} / ${periodS}s`;
+
     el.innerHTML = `
       <div class="cardTop">
         <div>
@@ -122,7 +136,7 @@ function renderShop() {
         <div style="color:var(--accent); font-weight:800">${formatInt(item.price)} 金</div>
       </div>
       <div class="cardMeta">
-        <div>收益 +${item.incomeBonus} / ${periodS}s</div>
+        <div>${effectText}</div>
         <div>${item.tierLabel}</div>
       </div>
       <div class="cardBuy">
@@ -248,9 +262,14 @@ const loop = createLoop({
     // Player HP bar
     const p = combat.player;
     renderHpBar(ctx, 18, 18, 220, 10, p.hp / p.hpMax, '#ff6b6b');
+    ctx.fillStyle = 'rgba(230,240,255,0.92)';
+    ctx.font = '12px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace';
+    ctx.fillText(`HP ${p.hp}/${p.hpMax}`, 18, 14);
+
     // Enemy HP bar
     if (combat.enemy) {
       renderHpBar(ctx, canvas.width - 238, 18, 220, 10, combat.enemy.hp / combat.enemy.hpMax, '#6df2b0');
+      ctx.fillText(`${combat.enemy.hp}/${combat.enemy.hpMax}`, canvas.width - 238, 14);
     }
 
     // Entities
@@ -263,9 +282,13 @@ const loop = createLoop({
     ctx.fillText(`Wave ${combat.wave}  Kills ${combat.kills}`, 18, 48);
     if (combat.enemy) ctx.fillText(`${combat.enemy.name}`, canvas.width - 238, 48);
 
-    if (combat.fx.dmgTextMs > 0 && combat.fx.lastDamageText && combat.enemy) {
+    if (combat.fx.dmgTextMs > 0 && combat.fx.lastDamageText) {
       ctx.fillStyle = 'rgba(255,213,106,0.9)';
-      ctx.fillText(combat.fx.lastDamageText, Math.floor(canvas.width * 0.70), Math.floor(canvas.height * 0.55));
+      // If player was hit recently, show near lobster; otherwise near enemy.
+      const nearPlayer = combat.fx.playerHitMs > 0;
+      const tx = nearPlayer ? Math.floor(canvas.width * 0.52) : Math.floor(canvas.width * 0.70);
+      const ty = nearPlayer ? Math.floor(canvas.height * 0.60) : Math.floor(canvas.height * 0.55);
+      ctx.fillText(combat.fx.lastDamageText, tx, ty);
     }
   },
 });

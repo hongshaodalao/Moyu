@@ -12,10 +12,10 @@ export function createCombatState() {
     kills: 0,
 
     player: {
-      hpMax: 120,
-      hp: 120,
-      atk: 8,
-      def: 1,
+      hpMax: 220,
+      hp: 220,
+      atk: 10,
+      def: 2,
       atkIntervalMs: 900, // ~1.11 atk/s
       critChance: 0,
       critMult: 1.5,
@@ -40,10 +40,10 @@ export function createCombatState() {
 
 export function createEnemy(wave) {
   // slow-burn growth: enemy gets tougher a bit faster than reward.
-  const hp = Math.floor(45 * Math.pow(1.18, wave - 1));
-  const atk = Math.floor(4 * Math.pow(1.15, wave - 1));
-  const atkIntervalMs = Math.max(520, Math.floor(1200 * Math.pow(0.985, wave - 1)));
-  const goldReward = Math.floor(6 * Math.pow(1.1, wave - 1));
+  const hp = Math.floor(50 * Math.pow(1.17, wave - 1));
+  const atk = Math.floor(3 * Math.pow(1.10, wave - 1));
+  const atkIntervalMs = Math.max(760, Math.floor(1200 * Math.pow(0.992, wave - 1)));
+  const goldReward = Math.floor(8 * Math.pow(1.12, wave - 1));
 
   // visual size scales slightly
   const size = clamp(18 + wave * 0.25, 18, 32);
@@ -94,7 +94,6 @@ export function restartRun(combat) {
   combat.runStartMs = Date.now();
   combat.wave = 1;
   combat.kills = 0;
-  combat.player.hpMax = combat.player.hpMax;
   combat.player.hp = combat.player.hpMax;
   combat.enemy = createEnemy(1);
   combat.timers.pAtkCd = 0;
@@ -150,7 +149,9 @@ export function updateCombat({ state, combat }, dt) {
     combat.timers.eAtkCd += e.atkIntervalMs;
     const dmg = calcDamage(e.atk, p.def);
     p.hp -= dmg;
-    combat.fx.playerHitMs = 140;
+    combat.fx.playerHitMs = 160;
+    combat.fx.lastDamageText = `-${dmg}`;
+    combat.fx.dmgTextMs = 450;
   }
 
   // Resolve kills
