@@ -54,8 +54,9 @@ body{
 #shopPane{grid-column:1; grid-row:2; display:flex; flex-direction:column; padding:10px}
 
 #game{
-  width:100%;
-  height:100%;
+  /* JS will set integer-multiple pixel-perfect CSS size */
+  width:960px;
+  height:540px;
   max-width: 100%;
   max-height: 100%;
   border:1px solid var(--border);
@@ -84,13 +85,15 @@ body{
 .shopMeta{color:var(--muted); font-size:13px}
 
 .shopBody{flex:1; min-height:0; display:flex}
-.shopList{flex:1; display:grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap:10px; align-content:start}
+.shopBody{flex:1; min-height:0; display:flex; padding-top:6px}
+.shopList{flex:1; display:grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-auto-rows: 1fr; gap:10px; align-content:start; overflow:hidden}
 
 .card{
   border:1px solid var(--border);
   border-radius:12px;
   background:rgba(16,38,55,.55);
   padding:10px;
+  min-height: 0;
 }
 .cardTop{display:flex; justify-content:space-between; gap:10px; align-items:flex-start}
 .cardTitle{font-weight:900; font-size:14px}

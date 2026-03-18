@@ -1,5 +1,6 @@
 import { createGameState, addGold, setGold, formatInt, clamp } from './game/state.js';
 import { initScale } from './ui/scale.js';
+import { initPixelPerfectCanvas } from './ui/pixelScale.js';
 import { createShop, getUnlockedItems, tryBuy, computeShopTier, getItemById } from './game/shop.js';
 import { createCombatState, updateCombat, applyCombatEquipment, restartRun } from './game/combat.js';
 import { createLoop } from './game/loop.js';
@@ -13,6 +14,9 @@ initScale();
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 ctx.imageSmoothingEnabled = false;
+
+// Pixel-perfect scaling for canvas within scene pane
+initPixelPerfectCanvas(canvas, document.getElementById('scenePane'));
 
 const ui = {
   goldValue: document.getElementById('goldValue'),
