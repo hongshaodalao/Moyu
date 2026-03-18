@@ -12,6 +12,7 @@ export function saveNow({ state, shop }) {
       lastSeenMs: state.lastSeenMs,
     },
     owned: shop.getOwned(),
+    equipped: shop.equipped,
   };
   localStorage.setItem(SAVE_KEY, JSON.stringify(payload));
 }
@@ -31,6 +32,7 @@ export function loadSave() {
         lastSeenMs: Number(parsed.state?.lastSeenMs ?? Date.now()),
       },
       owned: parsed.owned || [],
+      equipped: parsed.equipped || null,
     };
   } catch {
     return null;

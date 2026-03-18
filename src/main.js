@@ -14,15 +14,22 @@ ctx.imageSmoothingEnabled = false;
 const ui = {
   goldValue: document.getElementById('goldValue'),
   incomeValue: document.getElementById('incomeValue'),
-  shopBtn: document.getElementById('shopBtn'),
   saveBtn: document.getElementById('saveBtn'),
   resetBtn: document.getElementById('resetBtn'),
-  panel: document.getElementById('panel'),
-  closePanelBtn: document.getElementById('closePanelBtn'),
   shopList: document.getElementById('shopList'),
   shopMeta: document.getElementById('shopMeta'),
+  ownedList: document.getElementById('ownedList'),
   tabEconomy: document.getElementById('tabEconomy'),
   tabCombat: document.getElementById('tabCombat'),
+
+  statHp: document.getElementById('statHp'),
+  statAtk: document.getElementById('statAtk'),
+  statDef: document.getElementById('statDef'),
+  statAps: document.getElementById('statAps'),
+  statWave: document.getElementById('statWave'),
+  eqWeapon: document.getElementById('eqWeapon'),
+  eqArmor: document.getElementById('eqArmor'),
+  eqTrinket: document.getElementById('eqTrinket'),
 
   gameOver: document.getElementById('gameOver'),
   gameOverStats: document.getElementById('gameOverStats'),
@@ -47,19 +54,25 @@ const saved = loadSave();
 if (saved) {
   Object.assign(state, saved.statePatch);
   shop.applyOwned(saved.owned);
+  if (saved.equipped) {
+    shop.equipped.weapon = saved.equipped.weapon || null;
+    shop.equipped.armor = saved.equipped.armor || null;
+    shop.equipped.trinket = saved.equipped.trinket || null;
+  }
   applyOfflineEarnings({ state, nowMs: Date.now() });
 }
 
 const scene = createSceneRenderer();
 const lobster = createLobster();
 
-function recomputeCombatBonusesFromOwned() {
+function recomputeCombatBonusesFromEquipped() {
   combatBonuses.hpMax = 0;
   combatBonuses.atk = 0;
   combatBonuses.def = 0;
   combatBonuses.atkSpeedPct = 0;
 
-  for (const id of shop.getOwned()) {
+  const ids = [shop.equipped.weapon, shop.equipped.armor, shop.equipped.trinket].filter(Boolean);
+  for (const id of ids) {
     const item = getItemById(id);
     if (!item || !item.combatBonus) continue;
     combatBonuses.hpMax += item.combatBonus.hpMax || 0;
@@ -71,12 +84,12 @@ function recomputeCombatBonusesFromOwned() {
   applyCombatEquipment(combat, combatBonuses);
 }
 
-// Restore scene effects + combat bonuses from owned items on load
+// Restore scene effects from owned items on load
 for (const id of shop.getOwned()) {
   const item = getItemById(id);
   if (item) scene.applyPurchase(item);
 }
-recomputeCombatBonusesFromOwned();
+recomputeCombatBonusesFromEquipped();
 
 let shopTab = 'economy';
 
@@ -92,14 +105,7 @@ function setShopTab(next) {
   renderShop();
 }
 
-function openShop() {
-  ui.panel.classList.remove('hidden');
-  renderShop();
-}
-function closeShop() {
-  ui.panel.classList.add('hidden');
-}
-
+// Shop is now always visible on the right panel.
 function formatCombatBonus(b) {
   if (!b) return '战斗：—';
   const parts = [];
@@ -108,6 +114,80 @@ function formatCombatBonus(b) {
   if (b.hpMax) parts.push(`生命上限 +${b.hpMax}`);
   if (b.atkSpeedPct) parts.push(`攻速 +${Math.round(b.atkSpeedPct * 100)}%`);
   return `战斗：${parts.join('，') || '—'}`;
+}
+
+function renderOwned() {
+  // Show owned combat gear and allow equip/unequip.
+  const ownedCombat = shop.getOwned()
+    .map(getItemById)
+    .filter(it => it && it.kind === 'combat');
+
+  ui.ownedList.innerHTML = '';
+  if (ownedCombat.length === 0) {
+    ui.ownedList.innerHTML = `<div class="hint">尚未拥有战斗装备。</div>`;
+    return;
+  }
+
+  for (const it of ownedCombat) {
+    const el = document.createElement('div');
+    el.className = 'ownedItem';
+
+    const slot = it.slot;
+    const equipped = shop.equipped[slot] === it.id;
+
+    el.innerHTML = `
+      <div class="ownedTop">
+        <div>
+          <div class="ownedName">${it.name}</div>
+          <div class="cardDesc">${formatCombatBonus(it.combatBonus)}</div>
+          <div class="hint">槽位：${slotLabel(slot)}</div>
+        </div>
+        <div style="color:${equipped ? 'var(--good)' : 'var(--muted)'}; font-weight:900">${equipped ? '已装备' : '未装备'}</div>
+      </div>
+      <div class="ownedBtns">
+        <button class="btn ${equipped ? 'secondary' : ''}" data-action="equip" data-id="${it.id}" data-slot="${slot}">${equipped ? '保持装备' : '装备'}</button>
+        <button class="btn secondary" data-action="unequip" data-slot="${slot}">卸下该槽位</button>
+      </div>
+    `;
+
+    el.querySelectorAll('button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const action = btn.dataset.action;
+        const slot = btn.dataset.slot;
+        if (action === 'equip') {
+          shop.equip(slot, it.id);
+        } else if (action === 'unequip') {
+          shop.unequip(slot);
+        }
+        recomputeCombatBonusesFromEquipped();
+        renderStats();
+        renderOwned();
+        saveNow({ state, shop });
+      });
+    });
+
+    ui.ownedList.appendChild(el);
+  }
+}
+
+function slotLabel(slot) {
+  return slot === 'weapon' ? '武器' : slot === 'armor' ? '护甲' : '饰品';
+}
+
+function renderStats() {
+  const p = combat.player;
+  ui.statHp.textContent = `${p.hp}/${p.hpMax}`;
+  ui.statAtk.textContent = `${p.atk}`;
+  ui.statDef.textContent = `${p.def}`;
+  ui.statAps.textContent = `${(1000 / p.atkIntervalMs).toFixed(2)} 次/秒`;
+  ui.statWave.textContent = `${combat.wave} / ${combat.kills}`;
+
+  const w = shop.equipped.weapon ? getItemById(shop.equipped.weapon)?.name : '无';
+  const a = shop.equipped.armor ? getItemById(shop.equipped.armor)?.name : '无';
+  const t = shop.equipped.trinket ? getItemById(shop.equipped.trinket)?.name : '无';
+  ui.eqWeapon.textContent = w;
+  ui.eqArmor.textContent = a;
+  ui.eqTrinket.textContent = t;
 }
 
 function renderShop() {
@@ -149,8 +229,10 @@ function renderShop() {
       if (ok) {
         // Apply scene changes
         scene.applyPurchase(item);
-        // Apply combat bonuses if it's battle gear
-        recomputeCombatBonusesFromOwned();
+        // If battle gear was purchased, it goes to owned list.
+        // Player still needs to equip it to take effect.
+        renderOwned();
+        recomputeCombatBonusesFromEquipped();
 
         saveNow({ state, shop });
         renderShop();
@@ -165,6 +247,7 @@ function renderShop() {
 function renderHUD() {
   ui.goldValue.textContent = formatInt(state.gold);
   ui.incomeValue.textContent = `+${formatInt(state.autoIncome)} / ${Math.round(state.incomePeriodMs / 100) / 10}s`;
+  renderStats();
 }
 
 function showGameOver() {
@@ -176,11 +259,6 @@ function hideGameOver() {
   ui.gameOver.classList.add('hidden');
 }
 
-ui.shopBtn.addEventListener('click', () => {
-  if (ui.panel.classList.contains('hidden')) openShop();
-  else closeShop();
-});
-ui.closePanelBtn.addEventListener('click', closeShop);
 ui.tabEconomy.addEventListener('click', () => setShopTab('economy'));
 ui.tabCombat.addEventListener('click', () => setShopTab('combat'));
 ui.saveBtn.addEventListener('click', () => saveNow({ state, shop }));
@@ -213,7 +291,7 @@ function syncOnReturn() {
   applyOfflineEarnings({ state, nowMs: now });
   saveNow({ state, shop });
   renderHUD();
-  if (!ui.panel.classList.contains('hidden')) renderShop();
+  renderShop();
 }
 
 document.addEventListener('visibilitychange', () => {
@@ -240,8 +318,8 @@ const loop = createLoop({
       incomeAcc -= state.incomePeriodMs;
       tickIncome();
       renderHUD();
-      // if shop open, refresh afford states
-      if (!ui.panel.classList.contains('hidden')) renderShop();
+      // refresh afford states
+      renderShop();
     }
 
     updateCombat({ state, combat }, dt);

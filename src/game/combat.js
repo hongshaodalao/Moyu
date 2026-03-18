@@ -12,10 +12,10 @@ export function createCombatState() {
     kills: 0,
 
     player: {
-      hpMax: 220,
-      hp: 220,
-      atk: 10,
-      def: 2,
+      hpMax: 260,
+      hp: 260,
+      atk: 11,
+      def: 3,
       atkIntervalMs: 900, // ~1.11 atk/s
       critChance: 0,
       critMult: 1.5,
@@ -41,9 +41,9 @@ export function createCombatState() {
 export function createEnemy(wave) {
   // slow-burn growth: enemy gets tougher a bit faster than reward.
   const hp = Math.floor(50 * Math.pow(1.17, wave - 1));
-  const atk = Math.floor(3 * Math.pow(1.10, wave - 1));
-  const atkIntervalMs = Math.max(760, Math.floor(1200 * Math.pow(0.992, wave - 1)));
-  const goldReward = Math.floor(8 * Math.pow(1.12, wave - 1));
+  const atk = Math.floor(3 * Math.pow(1.08, wave - 1));
+  const atkIntervalMs = Math.max(820, Math.floor(1200 * Math.pow(0.994, wave - 1)));
+  const goldReward = Math.floor(9 * Math.pow(1.12, wave - 1));
 
   // visual size scales slightly
   const size = clamp(18 + wave * 0.25, 18, 32);
@@ -172,7 +172,8 @@ export function updateCombat({ state, combat }, dt) {
 }
 
 function calcDamage(atk, targetDef) {
-  // simple flat reduction with floor of 1
-  const raw = Math.max(1, Math.floor(atk - targetDef));
-  return raw;
+  // smoother mitigation: DEF gives diminishing returns but feels impactful.
+  // damage = atk * 100 / (100 + def*25)
+  const mitigated = Math.ceil((atk * 100) / (100 + Math.max(0, targetDef) * 25));
+  return Math.max(1, mitigated);
 }

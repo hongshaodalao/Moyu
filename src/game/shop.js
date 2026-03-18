@@ -128,55 +128,97 @@ const ITEMS = [
     id: 'fork-spear',
     tierMin: 0,
     kind: 'combat',
+    slot: 'weapon',
     name: '小叉子长枪',
     desc: '打工人的武器：看起来简陋，但真能扎。',
     price: 50,
     incomeBonus: 0,
-    combatBonus: { atk: 3 },
+    combatBonus: { atk: 4 },
     sceneEffect: { type: 'prop', key: 'fork' },
+  },
+  {
+    id: 'twin-daggers',
+    tierMin: 0,
+    kind: 'combat',
+    slot: 'weapon',
+    name: '双匕贝壳刃',
+    desc: '攻速路线：伤害不高，但出手很快。',
+    price: 160,
+    incomeBonus: 0,
+    combatBonus: { atk: 2, atkSpeedPct: 0.25 },
+    sceneEffect: { type: 'prop', key: 'blade' },
   },
   {
     id: 'shell-armor',
     tierMin: 0,
     kind: 'combat',
+    slot: 'armor',
     name: '贝壳护甲',
     desc: '稍微靠谱一点的防护。',
     price: 120,
     incomeBonus: 0,
-    combatBonus: { def: 2, hpMax: 20 },
+    combatBonus: { def: 3, hpMax: 40 },
     sceneEffect: { type: 'prop', key: 'armor' },
+  },
+  {
+    id: 'iron-plating',
+    tierMin: 25,
+    kind: 'combat',
+    slot: 'armor',
+    name: '铁甲贴片',
+    desc: '硬得离谱：更高防御，适合抗伤。',
+    price: 900,
+    incomeBonus: 0,
+    combatBonus: { def: 6 },
+    sceneEffect: { type: 'prop', key: 'steel' },
+  },
+  {
+    id: 'coin-charm',
+    tierMin: 0,
+    kind: 'combat',
+    slot: 'trinket',
+    name: '招财海螺',
+    desc: '经济路线：不加战斗属性，但让你更快买升级。',
+    price: 140,
+    incomeBonus: 0,
+    combatBonus: { },
+    // handled specially later (gold bonus); keep placeholder now
+    sceneEffect: { type: 'prop', key: 'shellCup' },
   },
   {
     id: 'hot-sauce',
     tierMin: 25,
     kind: 'combat',
+    slot: 'trinket',
     name: '热浪辣酱',
     desc: '上头以后出手更快。',
     price: 800,
     incomeBonus: 0,
-    combatBonus: { atkSpeedPct: 0.18 },
+    combatBonus: { atkSpeedPct: 0.22 },
     sceneEffect: { type: 'theme', key: 'warmGlow' },
   },
   {
     id: 'med-seaweed',
     tierMin: 60,
     kind: 'combat',
+    slot: 'armor',
     name: '医疗海藻包',
     desc: '血条更长，容错更高。',
     price: 5200,
     incomeBonus: 0,
-    combatBonus: { hpMax: 80 },
+    combatBonus: { hpMax: 140 },
     sceneEffect: { type: 'prop', key: 'med' },
   },
   {
     id: 'steel-claw',
     tierMin: 150,
     kind: 'combat',
+    slot: 'weapon',
     name: '钢钳套',
     desc: '火力更足，专治血厚怪。',
     price: 38000,
     incomeBonus: 0,
-    combatBonus: { atk: 35 },
+    combatBonus: { atk: 42 },
     sceneEffect: { type: 'prop', key: 'steel' },
   },
 ];
@@ -192,8 +234,16 @@ export function computeShopTier(autoIncome) {
 
 export function createShop() {
   const owned = new Set();
+  const equipped = {
+    weapon: null,
+    armor: null,
+    trinket: null,
+  };
+
   return {
     owned,
+    equipped,
+
     applyOwned(list) {
       owned.clear();
       for (const id of list || []) owned.add(id);
@@ -206,6 +256,13 @@ export function createShop() {
     },
     has(id) {
       return owned.has(id);
+    },
+
+    equip(slot, id) {
+      equipped[slot] = id;
+    },
+    unequip(slot) {
+      equipped[slot] = null;
     },
   };
 }
