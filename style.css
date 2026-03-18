@@ -22,7 +22,7 @@ body{
 .layout2{
   height:100%;
   display:grid;
-  grid-template-rows: 55vh 45vh;
+  grid-template-rows: auto 1fr;
   gap:14px;
   padding:14px;
 }
@@ -31,14 +31,14 @@ body{
   display:grid;
   grid-template-columns: minmax(0, 1fr) 420px;
   gap:14px;
-  align-items:stretch;
+  align-items:start;
 }
 
 .left{display:flex; justify-content:center; align-items:stretch}
 
 #game{
-  width:100%;
-  height:100%;
+  width:min(calc(100vw - 420px - 42px), 960px);
+  height:auto;
   border:1px solid var(--border);
   background:#000;
   image-rendering: pixelated;
@@ -46,7 +46,7 @@ body{
 }
 
 .right{
-  height:100%;
+  height:auto;
   overflow:hidden;
   display:flex;
   flex-direction:column;
@@ -65,6 +65,7 @@ body{
   overflow:hidden;
   display:flex;
   flex-direction:column;
+  max-height: 45vh;
 }
 
 .bottomGrid{
