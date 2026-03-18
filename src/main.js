@@ -1,4 +1,5 @@
 import { createGameState, addGold, setGold, formatInt, clamp } from './game/state.js';
+import { initScale } from './ui/scale.js';
 import { createShop, getUnlockedItems, tryBuy, computeShopTier, getItemById } from './game/shop.js';
 import { createCombatState, updateCombat, applyCombatEquipment, restartRun } from './game/combat.js';
 import { createLoop } from './game/loop.js';
@@ -6,6 +7,8 @@ import { loadSave, saveNow, hardReset, applyOfflineEarnings } from './game/save.
 import { createSceneRenderer } from './render/scene.js';
 import { createLobster } from './render/lobster.js';
 import { renderEnemy, renderHpBar } from './render/enemy.js';
+
+initScale();
 
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
@@ -18,9 +21,11 @@ const ui = {
   resetBtn: document.getElementById('resetBtn'),
   shopList: document.getElementById('shopList'),
   shopMeta: document.getElementById('shopMeta'),
-  ownedList: document.getElementById('ownedList'),
   tabEconomy: document.getElementById('tabEconomy'),
   tabCombat: document.getElementById('tabCombat'),
+  prevPage: document.getElementById('prevPage'),
+  nextPage: document.getElementById('nextPage'),
+  pageText: document.getElementById('pageText'),
 
   statHp: document.getElementById('statHp'),
   statAtk: document.getElementById('statAtk'),
@@ -92,9 +97,12 @@ for (const id of shop.getOwned()) {
 recomputeCombatBonusesFromEquipped();
 
 let shopTab = 'economy';
+let shopPage = 0;
+const SHOP_PAGE_SIZE = 8;
 
 function setShopTab(next) {
   shopTab = next;
+  shopPage = 0;
   if (shopTab === 'economy') {
     ui.tabEconomy.classList.remove('secondary');
     ui.tabCombat.classList.add('secondary');
@@ -116,10 +124,7 @@ function formatCombatBonus(b) {
   return `战斗：${parts.join('，') || '—'}`;
 }
 
-function renderOwned() {
-  // Equipment is auto-equipped on purchase now; hide owned list (kept for future expansion).
-  if (ui.ownedList) ui.ownedList.innerHTML = '';
-}
+function renderOwned() {}
 
 function slotLabel(slot) {
   return slot === 'weapon' ? '武器' : slot === 'armor' ? '护甲' : '饰品';
@@ -143,9 +148,16 @@ function renderStats() {
 
 function renderShop() {
   const tier = computeShopTier(state.autoIncome);
-  const unlocked = getUnlockedItems(shop, state.autoIncome, shopTab);
+  const unlockedAll = getUnlockedItems(shop, state.autoIncome, shopTab);
 
-  ui.shopMeta.textContent = `店铺等级：${tier.name}（当前自动收益：+${state.autoIncome} / ${Math.round(state.incomePeriodMs / 100) / 10}s）  ·  已拥有：${shop.getOwnedCount()} 件`;
+  const totalPages = Math.max(1, Math.ceil(unlockedAll.length / SHOP_PAGE_SIZE));
+  shopPage = Math.max(0, Math.min(shopPage, totalPages - 1));
+  const unlocked = unlockedAll.slice(shopPage * SHOP_PAGE_SIZE, shopPage * SHOP_PAGE_SIZE + SHOP_PAGE_SIZE);
+
+  ui.shopMeta.textContent = `店铺等级：${tier.name}（当前自动收益：+${state.autoIncome} / ${Math.round(state.incomePeriodMs / 100) / 10}s）`;
+  if (ui.pageText) ui.pageText.textContent = `${shopPage + 1} / ${totalPages}`;
+  if (ui.prevPage) ui.prevPage.disabled = shopPage <= 0;
+  if (ui.nextPage) ui.nextPage.disabled = shopPage >= totalPages - 1;
 
   ui.shopList.innerHTML = '';
   for (const item of unlocked) {
@@ -214,6 +226,8 @@ function hideGameOver() {
 
 ui.tabEconomy.addEventListener('click', () => setShopTab('economy'));
 ui.tabCombat.addEventListener('click', () => setShopTab('combat'));
+ui.prevPage.addEventListener('click', () => { shopPage = Math.max(0, shopPage - 1); renderShop(); });
+ui.nextPage.addEventListener('click', () => { shopPage = shopPage + 1; renderShop(); });
 // Save button removed (autosave covers it)
 ui.restartBtn.addEventListener('click', () => {
   restartRun(combat);
