@@ -12,10 +12,10 @@ export function createCombatState() {
     kills: 0,
 
     player: {
-      hpMax: 260,
-      hp: 260,
-      atk: 11,
-      def: 3,
+      hpMax: 420,
+      hp: 420,
+      atk: 12,
+      def: 4,
       atkIntervalMs: 900, // ~1.11 atk/s
       critChance: 0,
       critMult: 1.5,
@@ -40,10 +40,10 @@ export function createCombatState() {
 
 export function createEnemy(wave) {
   // slow-burn growth: enemy gets tougher a bit faster than reward.
-  const hp = Math.floor(50 * Math.pow(1.17, wave - 1));
-  const atk = Math.floor(3 * Math.pow(1.08, wave - 1));
-  const atkIntervalMs = Math.max(820, Math.floor(1200 * Math.pow(0.994, wave - 1)));
-  const goldReward = Math.floor(9 * Math.pow(1.12, wave - 1));
+  const hp = Math.floor(46 * Math.pow(1.16, wave - 1));
+  const atk = Math.floor(2.6 * Math.pow(1.07, wave - 1));
+  const atkIntervalMs = Math.max(880, Math.floor(1280 * Math.pow(0.996, wave - 1)));
+  const goldReward = Math.floor(10 * Math.pow(1.13, wave - 1));
 
   // visual size scales slightly
   const size = clamp(18 + wave * 0.25, 18, 32);
@@ -77,15 +77,19 @@ function pickEnemyName(wave) {
 export function applyCombatEquipment(combat, bonuses) {
   // bonuses: {hpMax, atk, def, atkSpeedPct}
   const p = combat.player;
-  p.hpMax = 120 + (bonuses.hpMax || 0);
-  p.atk = 8 + (bonuses.atk || 0);
-  p.def = 1 + (bonuses.def || 0);
+  // IMPORTANT: base stats must match createCombatState() for consistency.
+  const baseHp = 420;
+  const baseAtk = 12;
+  const baseDef = 4;
+  const baseInterval = 900;
 
-  const base = 900;
+  p.hpMax = baseHp + (bonuses.hpMax || 0);
+  p.atk = baseAtk + (bonuses.atk || 0);
+  p.def = baseDef + (bonuses.def || 0);
+
   const speed = 1 + (bonuses.atkSpeedPct || 0);
-  p.atkIntervalMs = clamp(Math.floor(base / speed), 220, 1400);
+  p.atkIntervalMs = clamp(Math.floor(baseInterval / speed), 220, 1800);
 
-  // keep hp within max; if increasing max, we can also heal a bit (optional)
   p.hp = clamp(p.hp, 0, p.hpMax);
 }
 
