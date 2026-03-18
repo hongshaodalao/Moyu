@@ -261,7 +261,7 @@ function hideGameOver() {
 
 ui.tabEconomy.addEventListener('click', () => setShopTab('economy'));
 ui.tabCombat.addEventListener('click', () => setShopTab('combat'));
-ui.saveBtn.addEventListener('click', () => saveNow({ state, shop }));
+// Save button removed (autosave covers it)
 ui.restartBtn.addEventListener('click', () => {
   restartRun(combat);
   hideGameOver();
@@ -280,7 +280,10 @@ ui.resetBtn.addEventListener('click', () => {
   state.incomePeriodMs = 3000;
   state.lastSeenMs = Date.now();
   shop.applyOwned([]);
-  // easiest way to fully reset scene/particles: hard reload to a cache-busting URL
+  shop.unequip('weapon');
+  shop.unequip('armor');
+  shop.unequip('trinket');
+  // easiest way to fully reset: hard reload to a cache-busting URL
   location.href = location.pathname + '?r=' + Date.now();
 });
 
@@ -341,7 +344,7 @@ const loop = createLoop({
     const p = combat.player;
     renderHpBar(ctx, 18, 18, 220, 10, p.hp / p.hpMax, '#ff6b6b');
     ctx.fillStyle = 'rgba(230,240,255,0.92)';
-    ctx.font = '12px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace';
+    ctx.font = '14px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace';
     ctx.fillText(`HP ${p.hp}/${p.hpMax}`, 18, 14);
 
     // Enemy HP bar
