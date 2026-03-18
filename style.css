@@ -22,23 +22,32 @@ body{
 .layout2{
   height:100%;
   display:grid;
-  grid-template-rows: auto 1fr;
-  gap:14px;
-  padding:14px;
+  grid-template-columns: 1500px 420px;
+  grid-template-rows: 800px 280px;
+  gap:0;
+  padding:0;
+  align-items:start;
+  justify-content:center;
 }
 
 .top{
-  display:grid;
-  grid-template-columns: minmax(0, 1fr) 420px;
-  gap:14px;
-  align-items:start;
+  display:contents;
+}
+
+.left{
+  grid-column:1;
+  grid-row:1;
+  display:flex;
+  align-items:flex-start;
+  justify-content:flex-start;
+  padding:0;
 }
 
 .left{display:flex; justify-content:center; align-items:stretch}
 
 #game{
-  width:min(calc(100vw - 420px - 42px), 960px);
-  height:auto;
+  width:1500px;
+  height:800px;
   border:1px solid var(--border);
   background:#000;
   image-rendering: pixelated;
@@ -46,45 +55,46 @@ body{
 }
 
 .right{
-  height:auto;
+  grid-column:2;
+  grid-row:1 / span 2;
+  width:420px;
+  height:1080px;
   overflow:hidden;
   display:flex;
   flex-direction:column;
-  border:1px solid var(--border);
-  border-radius:14px;
+  border-left:1px solid var(--border);
   background:rgba(13,27,38,.82);
   backdrop-filter: blur(8px);
 }
 
 .bottomShop{
-  border:1px solid var(--border);
-  border-radius:14px;
+  grid-column:1;
+  grid-row:2;
+  width:1500px;
+  height:280px;
+  border-top:1px solid var(--border);
   background:rgba(13,27,38,.72);
   backdrop-filter: blur(8px);
-  padding:12px;
+  padding:10px 10px;
   overflow:hidden;
   display:flex;
   flex-direction:column;
-  max-height: 45vh;
 }
 
 .bottomGrid{
   display:grid;
-  grid-template-columns: 1.4fr 1fr;
-  gap:12px;
+  grid-template-columns: 1fr;
+  gap:10px;
   min-height:0;
   flex:1;
 }
 
-.bottomShop .shopList,
-.bottomShop .ownedList{overflow:auto; min-height:0}
+.bottomShop .shopList{overflow:hidden; min-height:0}
+.bottomShop .ownedList{display:none}
 
-@media (max-width: 980px){
-  .layout2{grid-template-rows:auto;}
-  .top{grid-template-columns:1fr}
-  .right{height:auto}
-  #game{height:auto}
-  .bottomGrid{grid-template-columns:1fr}
+@media (max-width: 1920px){
+  /* allow simple downscale if viewport smaller than target */
+  .layout2{transform-origin: top center;}
 }
 
 .sideSection{padding:12px 12px; border-bottom:1px solid var(--border)}
@@ -142,7 +152,7 @@ body{
 .shopTabs{display:flex; gap:10px; margin-bottom:10px}
 .shopMeta{color:var(--muted); font-size:13px; margin-bottom:10px}
 
-.shopList{display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:10px}
+.shopList{display:grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap:10px}
 .shopList.oneCol{grid-template-columns:1fr}
 
 .ownedList{margin-top:10px; display:flex; flex-direction:column; gap:8px}

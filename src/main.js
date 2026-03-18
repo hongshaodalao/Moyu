@@ -117,57 +117,8 @@ function formatCombatBonus(b) {
 }
 
 function renderOwned() {
-  // Show owned combat gear and allow equip/unequip.
-  const ownedCombat = shop.getOwned()
-    .map(getItemById)
-    .filter(it => it && it.kind === 'combat');
-
-  ui.ownedList.innerHTML = '';
-  if (ownedCombat.length === 0) {
-    ui.ownedList.innerHTML = `<div class="hint">尚未拥有战斗装备。</div>`;
-    return;
-  }
-
-  for (const it of ownedCombat) {
-    const el = document.createElement('div');
-    el.className = 'ownedItem';
-
-    const slot = it.slot;
-    const equipped = shop.equipped[slot] === it.id;
-
-    el.innerHTML = `
-      <div class="ownedTop">
-        <div>
-          <div class="ownedName">${it.name}</div>
-          <div class="cardDesc">${formatCombatBonus(it.combatBonus)}</div>
-          <div class="hint">槽位：${slotLabel(slot)}</div>
-        </div>
-        <div style="color:${equipped ? 'var(--good)' : 'var(--muted)'}; font-weight:900">${equipped ? '已装备' : '未装备'}</div>
-      </div>
-      <div class="ownedBtns">
-        <button class="btn ${equipped ? 'secondary' : ''}" data-action="equip" data-id="${it.id}" data-slot="${slot}">${equipped ? '保持装备' : '装备'}</button>
-        <button class="btn secondary" data-action="unequip" data-slot="${slot}">卸下该槽位</button>
-      </div>
-    `;
-
-    el.querySelectorAll('button').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const action = btn.dataset.action;
-        const slot = btn.dataset.slot;
-        if (action === 'equip') {
-          shop.equip(slot, it.id);
-        } else if (action === 'unequip') {
-          shop.unequip(slot);
-        }
-        recomputeCombatBonusesFromEquipped();
-        renderStats();
-        renderOwned();
-        saveNow({ state, shop });
-      });
-    });
-
-    ui.ownedList.appendChild(el);
-  }
+  // Equipment is auto-equipped on purchase now; hide owned list (kept for future expansion).
+  if (ui.ownedList) ui.ownedList.innerHTML = '';
 }
 
 function slotLabel(slot) {
@@ -229,9 +180,11 @@ function renderShop() {
       if (ok) {
         // Apply scene changes
         scene.applyPurchase(item);
-        // If battle gear was purchased, it goes to owned list.
-        // Player still needs to equip it to take effect.
-        renderOwned();
+
+        // Auto-equip battle gear immediately
+        if (item.kind === 'combat' && item.slot) {
+          shop.equip(item.slot, item.id);
+        }
         recomputeCombatBonusesFromEquipped();
 
         saveNow({ state, shop });
