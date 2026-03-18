@@ -54,7 +54,16 @@ export function applyOfflineEarnings({ state, nowMs }) {
 }
 
 export function hardReset() {
+  // Remove current save
   localStorage.removeItem(SAVE_KEY);
-  // Also clear legacy keys if any future versions add more.
-  // (No-op today, but keeps reset robust.)
+
+  // Robust reset: sometimes multiple keys exist due to dev iterations.
+  // Only remove our own keys (prefix moyu.).
+  for (let i = localStorage.length - 1; i >= 0; i--) {
+    const k = localStorage.key(i);
+    if (k && k.startsWith('moyu.')) localStorage.removeItem(k);
+  }
+
+  // Best-effort: also clear service worker caches if any (future-proof)
+  // (No SW is registered today.)
 }

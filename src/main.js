@@ -108,9 +108,16 @@ ui.saveBtn.addEventListener('click', () => saveNow({ state, shop }));
 ui.resetBtn.addEventListener('click', () => {
   const ok = confirm('确定要重置存档吗？这会清空金币与购买记录。');
   if (!ok) return;
+
   hardReset();
-  // In some browsers / setups, a plain reload may keep bfcache.
-  // Force a clean navigation.
+
+  // Also reset in-memory state immediately (so even if reload is blocked, UI updates).
+  state.gold = 0;
+  state.autoIncome = 10;
+  state.incomePeriodMs = 3000;
+  state.lastSeenMs = Date.now();
+  shop.applyOwned([]);
+  // easiest way to fully reset scene/particles: hard reload to a cache-busting URL
   location.href = location.pathname + '?r=' + Date.now();
 });
 
