@@ -68,7 +68,7 @@ export function createLobster() {
       }
     },
 
-    render(ctx, w, h) {
+    render(ctx, w, h, fx) {
       // anchor near center-bottom
       const baseX = Math.floor(w * 0.52);
       const baseY = Math.floor(h * 0.70);
@@ -103,28 +103,33 @@ export function createLobster() {
       // shadow
       fillRect(ctx, x - 18, y + 30, 60, 6, 'rgba(0,0,0,0.35)');
 
+      const playerHit = fx?.playerHitMs > 0;
+      const R1 = playerHit ? '#f2f2f2' : red1;
+      const R2 = playerHit ? '#d0d0d0' : red2;
+      const R3 = playerHit ? '#b8b8b8' : red3;
+
       // abdomen
       if (!flop) {
-        fillRect(ctx, x, y, 36, 22, red2);
-        fillRect(ctx, x + 2, y + 2, 32, 18, red1);
-        fillRect(ctx, x + 10, y + 6, 16, 4, red2);
+        fillRect(ctx, x, y, 36, 22, R2);
+        fillRect(ctx, x + 2, y + 2, 32, 18, R1);
+        fillRect(ctx, x + 10, y + 6, 16, 4, R2);
       } else {
         // flop = tilt sideways
-        fillRect(ctx, x - 4, y + 6, 44, 18, red2);
-        fillRect(ctx, x - 2, y + 8, 40, 14, red1);
+        fillRect(ctx, x - 4, y + 6, 44, 18, R2);
+        fillRect(ctx, x - 2, y + 8, 40, 14, R1);
       }
 
       // tail
-      fillRect(ctx, x - 10, y + 6, 12, 12, red3);
-      fillRect(ctx, x - 6, y + 10, 8, 4, red2);
+      fillRect(ctx, x - 10, y + 6, 12, 12, R3);
+      fillRect(ctx, x - 6, y + 10, 8, 4, R2);
 
       // head
-      fillRect(ctx, x + 30, y + 4, 20, 14, red2);
-      fillRect(ctx, x + 32, y + 6, 16, 10, red1);
+      fillRect(ctx, x + 30, y + 4, 20, 14, R2);
+      fillRect(ctx, x + 32, y + 6, 16, 10, R1);
 
       // eyes
-      fillRect(ctx, x + 40, y - 6, 4, 10, red3);
-      fillRect(ctx, x + 46, y - 6, 4, 10, red3);
+      fillRect(ctx, x + 40, y - 6, 4, 10, R3);
+      fillRect(ctx, x + 46, y - 6, 4, 10, R3);
       if (!eyeClosed) {
         fillRect(ctx, x + 40, y - 2, 4, 4, dark);
         fillRect(ctx, x + 46, y - 2, 4, 4, dark);
@@ -135,22 +140,22 @@ export function createLobster() {
 
       // legs
       for (let i = 0; i < 4; i++) {
-        fillRect(ctx, x + 6 + i * 7, y + 20, 4, 10, red3);
+        fillRect(ctx, x + 6 + i * 7, y + 20, 4, 10, R3);
       }
 
       // claws
       // left arm
-      fillRect(ctx, x + 24, y + 16, 10, 4, red3);
+      fillRect(ctx, x + 24, y + 16, 10, 4, R3);
       // right arm
-      fillRect(ctx, x + 42, y + 16, 10, 4, red3);
+      fillRect(ctx, x + 42, y + 16, 10, 4, R3);
 
       // left claw
-      fillRect(ctx, x + 14, y + 12 + clawLift, 12, 10, red2);
-      fillRect(ctx, x + 12, y + 10 + clawLift, 8, 4, red3);
+      fillRect(ctx, x + 14, y + 12 + clawLift, 12, 10, R2);
+      fillRect(ctx, x + 12, y + 10 + clawLift, 8, 4, R3);
 
       // right claw
-      fillRect(ctx, x + 52, y + 12 + clawLift, 12, 10, red2);
-      fillRect(ctx, x + 56, y + 10 + clawLift, 8, 4, red3);
+      fillRect(ctx, x + 52, y + 12 + clawLift, 12, 10, R2);
+      fillRect(ctx, x + 56, y + 10 + clawLift, 8, 4, R3);
 
       // sparkle when royal theme later could be added
     },

@@ -12,10 +12,12 @@ const TIERS = [
 // Items are organized by tier; each tier unlocks when autoIncome >= minIncome.
 // Each item has a scene effect descriptor for the renderer.
 const ITEMS = [
+  // --- Economy items (existing) ---
   // T1
   {
     id: 'shell-cup',
     tierMin: 0,
+    kind: 'economy',
     name: '贝壳存钱罐',
     desc: '把零散金币“归拢起来”，效率提升一点点。',
     price: 30,
@@ -25,6 +27,7 @@ const ITEMS = [
   {
     id: 'seaweed-mat',
     tierMin: 0,
+    kind: 'economy',
     name: '海草垫子',
     desc: '躺得更舒服，摸鱼更持久。',
     price: 70,
@@ -34,6 +37,7 @@ const ITEMS = [
   {
     id: 'tiny-claw-tool',
     tierMin: 0,
+    kind: 'economy',
     name: '小钳子工具',
     desc: '整理工作流（假装），自动收益更稳。',
     price: 130,
@@ -45,6 +49,7 @@ const ITEMS = [
   {
     id: 'coral-lamp',
     tierMin: 25,
+    kind: 'economy',
     name: '珊瑚小灯',
     desc: '照亮摸鱼角落，金币来得更勤。',
     price: 520,
@@ -54,6 +59,7 @@ const ITEMS = [
   {
     id: 'bubble-aerator',
     tierMin: 25,
+    kind: 'economy',
     name: '气泡增压器',
     desc: '气泡越多，灵感越多（大概）。',
     price: 980,
@@ -65,6 +71,7 @@ const ITEMS = [
   {
     id: 'sunken-cache',
     tierMin: 60,
+    kind: 'economy',
     name: '沉船小金库',
     desc: '传说中的“项目经费”，自动收益明显提升。',
     price: 3600,
@@ -74,6 +81,7 @@ const ITEMS = [
   {
     id: 'octo-accountant',
     tierMin: 60,
+    kind: 'economy',
     name: '章鱼会计',
     desc: '八只手同时记账，少丢几枚金币。',
     price: 6200,
@@ -85,6 +93,7 @@ const ITEMS = [
   {
     id: 'tide-engine',
     tierMin: 150,
+    kind: 'economy',
     name: '潮汐引擎',
     desc: '借潮汐之力，让金币像海浪一样涌来。',
     price: 26000,
@@ -94,6 +103,7 @@ const ITEMS = [
   {
     id: 'reef-factory',
     tierMin: 150,
+    kind: 'economy',
     name: '珊瑚工厂',
     desc: '规模化摸鱼（危险发言）。',
     price: 52000,
@@ -105,11 +115,69 @@ const ITEMS = [
   {
     id: 'royal-contract',
     tierMin: 400,
+    kind: 'economy',
     name: '王宫外包合同',
     desc: '稳定现金流（并不稳定），但确实更赚钱。',
     price: 260000,
     incomeBonus: 4200,
     sceneEffect: { type: 'theme', key: 'royal' },
+  },
+
+  // --- Combat gear (new) ---
+  {
+    id: 'fork-spear',
+    tierMin: 0,
+    kind: 'combat',
+    name: '小叉子长枪',
+    desc: '打工人的武器：看起来简陋，但真能扎。',
+    price: 50,
+    incomeBonus: 0,
+    combatBonus: { atk: 3 },
+    sceneEffect: { type: 'prop', key: 'fork' },
+  },
+  {
+    id: 'shell-armor',
+    tierMin: 0,
+    kind: 'combat',
+    name: '贝壳护甲',
+    desc: '稍微靠谱一点的防护。',
+    price: 120,
+    incomeBonus: 0,
+    combatBonus: { def: 2, hpMax: 20 },
+    sceneEffect: { type: 'prop', key: 'armor' },
+  },
+  {
+    id: 'hot-sauce',
+    tierMin: 25,
+    kind: 'combat',
+    name: '热浪辣酱',
+    desc: '上头以后出手更快。',
+    price: 800,
+    incomeBonus: 0,
+    combatBonus: { atkSpeedPct: 0.18 },
+    sceneEffect: { type: 'theme', key: 'warmGlow' },
+  },
+  {
+    id: 'med-seaweed',
+    tierMin: 60,
+    kind: 'combat',
+    name: '医疗海藻包',
+    desc: '血条更长，容错更高。',
+    price: 5200,
+    incomeBonus: 0,
+    combatBonus: { hpMax: 80 },
+    sceneEffect: { type: 'prop', key: 'med' },
+  },
+  {
+    id: 'steel-claw',
+    tierMin: 150,
+    kind: 'combat',
+    name: '钢钳套',
+    desc: '火力更足，专治血厚怪。',
+    price: 38000,
+    incomeBonus: 0,
+    combatBonus: { atk: 35 },
+    sceneEffect: { type: 'prop', key: 'steel' },
   },
 ];
 
@@ -142,14 +210,15 @@ export function createShop() {
   };
 }
 
-export function getUnlockedItems(shop, autoIncome) {
+export function getUnlockedItems(shop, autoIncome, kind = 'all') {
   return ITEMS
     .filter(i => autoIncome >= i.tierMin)
+    .filter(i => (kind === 'all' ? true : i.kind === kind))
     .map(i => ({
       ...i,
       owned: shop.has(i.id),
       tierLabel: `解锁条件：自动收益 ≥ +${i.tierMin} / 3s`,
-      price: shop.has(i.id) ? i.price : i.price,
+      price: i.price,
     }))
     .filter(i => !i.owned);
 }

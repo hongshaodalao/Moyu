@@ -1,9 +1,11 @@
 import { createGameState, addGold, setGold, formatInt, clamp } from './game/state.js';
 import { createShop, getUnlockedItems, tryBuy, computeShopTier, getItemById } from './game/shop.js';
+import { createCombatState, updateCombat, applyCombatEquipment, restartRun } from './game/combat.js';
 import { createLoop } from './game/loop.js';
 import { loadSave, saveNow, hardReset, applyOfflineEarnings } from './game/save.js';
 import { createSceneRenderer } from './render/scene.js';
 import { createLobster } from './render/lobster.js';
+import { renderEnemy, renderHpBar } from './render/enemy.js';
 
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
@@ -19,10 +21,26 @@ const ui = {
   closePanelBtn: document.getElementById('closePanelBtn'),
   shopList: document.getElementById('shopList'),
   shopMeta: document.getElementById('shopMeta'),
+  tabEconomy: document.getElementById('tabEconomy'),
+  tabCombat: document.getElementById('tabCombat'),
+
+  gameOver: document.getElementById('gameOver'),
+  gameOverStats: document.getElementById('gameOverStats'),
+  restartBtn: document.getElementById('restartBtn'),
+  closeOverBtn: document.getElementById('closeOverBtn'),
 };
 
 const state = createGameState();
 const shop = createShop();
+const combat = createCombatState();
+
+// Combat equipment bonuses are derived from owned items (new: battle gear).
+const combatBonuses = {
+  hpMax: 0,
+  atk: 0,
+  def: 0,
+  atkSpeedPct: 0,
+};
 
 // Load save + apply offline
 const saved = loadSave();
@@ -35,10 +53,43 @@ if (saved) {
 const scene = createSceneRenderer();
 const lobster = createLobster();
 
-// Restore scene effects from owned items on load
+function recomputeCombatBonusesFromOwned() {
+  combatBonuses.hpMax = 0;
+  combatBonuses.atk = 0;
+  combatBonuses.def = 0;
+  combatBonuses.atkSpeedPct = 0;
+
+  for (const id of shop.getOwned()) {
+    const item = getItemById(id);
+    if (!item || !item.combatBonus) continue;
+    combatBonuses.hpMax += item.combatBonus.hpMax || 0;
+    combatBonuses.atk += item.combatBonus.atk || 0;
+    combatBonuses.def += item.combatBonus.def || 0;
+    combatBonuses.atkSpeedPct += item.combatBonus.atkSpeedPct || 0;
+  }
+
+  applyCombatEquipment(combat, combatBonuses);
+}
+
+// Restore scene effects + combat bonuses from owned items on load
 for (const id of shop.getOwned()) {
   const item = getItemById(id);
   if (item) scene.applyPurchase(item);
+}
+recomputeCombatBonusesFromOwned();
+
+let shopTab = 'economy';
+
+function setShopTab(next) {
+  shopTab = next;
+  if (shopTab === 'economy') {
+    ui.tabEconomy.classList.remove('secondary');
+    ui.tabCombat.classList.add('secondary');
+  } else {
+    ui.tabEconomy.classList.add('secondary');
+    ui.tabCombat.classList.remove('secondary');
+  }
+  renderShop();
 }
 
 function openShop() {
@@ -51,9 +102,9 @@ function closeShop() {
 
 function renderShop() {
   const tier = computeShopTier(state.autoIncome);
-  const unlocked = getUnlockedItems(shop, state.autoIncome);
+  const unlocked = getUnlockedItems(shop, state.autoIncome, shopTab);
 
-  ui.shopMeta.textContent = `店铺等级：${tier.name}（当前自动收益：+${state.autoIncome} / 5s）  ·  已拥有：${shop.getOwnedCount()} 件`;
+  ui.shopMeta.textContent = `店铺等级：${tier.name}（当前自动收益：+${state.autoIncome} / ${Math.round(state.incomePeriodMs / 100) / 10}s）  ·  已拥有：${shop.getOwnedCount()} 件`;
 
   ui.shopList.innerHTML = '';
   for (const item of unlocked) {
@@ -84,6 +135,9 @@ function renderShop() {
       if (ok) {
         // Apply scene changes
         scene.applyPurchase(item);
+        // Apply combat bonuses if it's battle gear
+        recomputeCombatBonusesFromOwned();
+
         saveNow({ state, shop });
         renderShop();
         renderHUD();
@@ -99,12 +153,29 @@ function renderHUD() {
   ui.incomeValue.textContent = `+${formatInt(state.autoIncome)} / ${Math.round(state.incomePeriodMs / 100) / 10}s`;
 }
 
+function showGameOver() {
+  const sec = Math.floor((Date.now() - combat.runStartMs) / 1000);
+  ui.gameOverStats.textContent = `本局时长：${sec}s  ·  波次：${combat.wave}  ·  击杀：${combat.kills}`;
+  ui.gameOver.classList.remove('hidden');
+}
+function hideGameOver() {
+  ui.gameOver.classList.add('hidden');
+}
+
 ui.shopBtn.addEventListener('click', () => {
   if (ui.panel.classList.contains('hidden')) openShop();
   else closeShop();
 });
 ui.closePanelBtn.addEventListener('click', closeShop);
+ui.tabEconomy.addEventListener('click', () => setShopTab('economy'));
+ui.tabCombat.addEventListener('click', () => setShopTab('combat'));
 ui.saveBtn.addEventListener('click', () => saveNow({ state, shop }));
+ui.restartBtn.addEventListener('click', () => {
+  restartRun(combat);
+  hideGameOver();
+});
+ui.closeOverBtn.addEventListener('click', hideGameOver);
+
 ui.resetBtn.addEventListener('click', () => {
   const ok = confirm('确定要重置存档吗？这会清空金币与购买记录。');
   if (!ok) return;
@@ -159,6 +230,11 @@ const loop = createLoop({
       if (!ui.panel.classList.contains('hidden')) renderShop();
     }
 
+    updateCombat({ state, combat }, dt);
+    if (!combat.runActive && ui.gameOver.classList.contains('hidden')) {
+      showGameOver();
+    }
+
     lobster.update(dt);
     scene.update(dt);
   },
@@ -167,9 +243,30 @@ const loop = createLoop({
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     scene.render(ctx, canvas.width, canvas.height);
-    lobster.render(ctx, canvas.width, canvas.height);
 
-    // small floating text if needed later
+    // Combat HUD + enemy
+    // Player HP bar
+    const p = combat.player;
+    renderHpBar(ctx, 18, 18, 220, 10, p.hp / p.hpMax, '#ff6b6b');
+    // Enemy HP bar
+    if (combat.enemy) {
+      renderHpBar(ctx, canvas.width - 238, 18, 220, 10, combat.enemy.hp / combat.enemy.hpMax, '#6df2b0');
+    }
+
+    // Entities
+    lobster.render(ctx, canvas.width, canvas.height, combat.fx);
+    renderEnemy(ctx, canvas.width, canvas.height, combat.enemy, combat.fx);
+
+    // Text overlays
+    ctx.fillStyle = 'rgba(230,240,255,0.9)';
+    ctx.font = '14px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace';
+    ctx.fillText(`Wave ${combat.wave}  Kills ${combat.kills}`, 18, 48);
+    if (combat.enemy) ctx.fillText(`${combat.enemy.name}`, canvas.width - 238, 48);
+
+    if (combat.fx.dmgTextMs > 0 && combat.fx.lastDamageText && combat.enemy) {
+      ctx.fillStyle = 'rgba(255,213,106,0.9)';
+      ctx.fillText(combat.fx.lastDamageText, Math.floor(canvas.width * 0.70), Math.floor(canvas.height * 0.55));
+    }
   },
 });
 

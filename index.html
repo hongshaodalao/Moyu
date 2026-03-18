@@ -28,12 +28,30 @@
         <button id="resetBtn" class="btn danger" title="清空存档">重置</button>
       </div>
 
+      <div id="gameOver" class="hidden" role="dialog" aria-modal="true">
+        <div class="panelHeader">
+          <div class="panelTitle">游戏结束</div>
+          <div></div>
+        </div>
+        <div class="panelBody">
+          <div id="gameOverStats" class="shopMeta"></div>
+          <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:12px">
+            <button id="restartBtn" class="btn">重新开始本局</button>
+            <button id="closeOverBtn" class="btn secondary">关闭</button>
+          </div>
+        </div>
+      </div>
+
       <div id="panel" class="hidden" role="dialog" aria-modal="true">
         <div class="panelHeader">
           <div class="panelTitle">商店</div>
           <button id="closePanelBtn" class="btn secondary">关闭</button>
         </div>
         <div class="panelBody">
+          <div class="shopTabs">
+            <button id="tabEconomy" class="btn">收益道具</button>
+            <button id="tabCombat" class="btn secondary">战斗装备</button>
+          </div>
           <div id="shopMeta" class="shopMeta"></div>
           <div id="shopList" class="shopList"></div>
           <div class="hint">
