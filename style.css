@@ -36,7 +36,7 @@ body{
   height:1080px;
   display:grid;
   grid-template-columns: 1fr 420px;
-  grid-template-rows: 1fr 220px;
+  grid-template-rows: 1fr 260px;
   gap:14px;
   padding:14px;
 }
@@ -51,7 +51,7 @@ body{
 
 #scenePane{grid-column:1; grid-row:1; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,.35)}
 #statsPane{grid-column:2; grid-row:1 / span 2; display:flex; flex-direction:column; padding:12px}
-#shopPane{grid-column:1; grid-row:2; display:flex; flex-direction:column; padding:10px}
+#shopPane{grid-column:1; grid-row:2; display:flex; flex-direction:column; padding:8px 10px}
 
 #game{
   /* Fill the scene pane; scaleRoot keeps everything proportional. */
@@ -75,12 +75,14 @@ body{
 .equipSlot{border:1px solid var(--border); border-radius:12px; background:rgba(16,38,55,.28); padding:10px}
 
 /* Shop */
-.shopHeader{display:flex; flex-direction:column; gap:8px}
+.shopHeader{display:flex; flex-direction:column; gap:6px}
+.shopHeaderTop{display:flex; align-items:baseline; gap:10px}
 .shopTitle{font-weight:950}
-.shopTabs{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+.shopMeta{color:var(--muted); font-size:12px}
+.shopMeta.inline{margin-left:auto; text-align:right}
+.shopTabs{display:flex; gap:10px; align-items:center; flex-wrap:nowrap}
 .pager{display:flex; align-items:center; gap:8px; margin-left:auto}
 .pageText{color:var(--muted); font-size:12px; min-width:70px; text-align:center}
-.shopMeta{color:var(--muted); font-size:13px}
 
 .shopBody{flex:1; min-height:0; display:flex}
 .shopBody{min-height:0; display:flex; padding-top:6px}
@@ -92,7 +94,7 @@ body{
   border-radius:12px;
   background:rgba(16,38,55,.55);
   padding:10px;
-  height: 152px; /* ensure buy button visible in single-row shop */
+  height: 138px; /* tuned for 1-row shop */
   display:flex;
   flex-direction:column;
 }
