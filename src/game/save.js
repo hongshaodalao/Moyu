@@ -55,4 +55,6 @@ export function applyOfflineEarnings({ state, nowMs }) {
 
 export function hardReset() {
   localStorage.removeItem(SAVE_KEY);
+  // Also clear legacy keys if any future versions add more.
+  // (No-op today, but keeps reset robust.)
 }

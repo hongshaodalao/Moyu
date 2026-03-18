@@ -148,7 +148,7 @@ export function getUnlockedItems(shop, autoIncome) {
     .map(i => ({
       ...i,
       owned: shop.has(i.id),
-      tierLabel: `解锁：+${i.tierMin}/5s`,
+      tierLabel: `解锁条件：自动收益 ≥ +${i.tierMin} / 3s`,
       price: shop.has(i.id) ? i.price : i.price,
     }))
     .filter(i => !i.owned);

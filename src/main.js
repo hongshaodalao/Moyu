@@ -61,6 +61,7 @@ function renderShop() {
     const el = document.createElement('div');
     el.className = 'card';
 
+    const periodS = Math.round(state.incomePeriodMs / 100) / 10;
     el.innerHTML = `
       <div class="cardTop">
         <div>
@@ -70,7 +71,7 @@ function renderShop() {
         <div style="color:var(--accent); font-weight:800">${formatInt(item.price)} 金</div>
       </div>
       <div class="cardMeta">
-        <div>收益 +${item.incomeBonus} / 5s</div>
+        <div>收益 +${item.incomeBonus} / ${periodS}s</div>
         <div>${item.tierLabel}</div>
       </div>
       <div class="cardBuy">
@@ -95,7 +96,7 @@ function renderShop() {
 
 function renderHUD() {
   ui.goldValue.textContent = formatInt(state.gold);
-  ui.incomeValue.textContent = `+${formatInt(state.autoIncome)} / 5s`;
+  ui.incomeValue.textContent = `+${formatInt(state.autoIncome)} / ${Math.round(state.incomePeriodMs / 100) / 10}s`;
 }
 
 ui.shopBtn.addEventListener('click', () => {
@@ -108,7 +109,9 @@ ui.resetBtn.addEventListener('click', () => {
   const ok = confirm('确定要重置存档吗？这会清空金币与购买记录。');
   if (!ok) return;
   hardReset();
-  location.reload();
+  // In some browsers / setups, a plain reload may keep bfcache.
+  // Force a clean navigation.
+  location.href = location.pathname + '?r=' + Date.now();
 });
 
 // If tab is hidden/minimized, browsers throttle timers & rAF.
