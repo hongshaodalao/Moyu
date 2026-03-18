@@ -2,7 +2,8 @@ export function createGameState() {
   return {
     gold: 0,
     autoIncome: 10, // per period
-    incomePeriodMs: 5000,
+    // Faster early-game tempo
+    incomePeriodMs: 3000,
     // used for offline earnings
     lastSeenMs: Date.now(),
   };

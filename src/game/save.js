@@ -27,7 +27,7 @@ export function loadSave() {
       statePatch: {
         gold: Number(parsed.state?.gold ?? 0),
         autoIncome: Number(parsed.state?.autoIncome ?? 10),
-        incomePeriodMs: Number(parsed.state?.incomePeriodMs ?? 5000),
+        incomePeriodMs: Number(parsed.state?.incomePeriodMs ?? 3000),
         lastSeenMs: Number(parsed.state?.lastSeenMs ?? Date.now()),
       },
       owned: parsed.owned || [],

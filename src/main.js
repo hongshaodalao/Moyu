@@ -1,5 +1,5 @@
 import { createGameState, addGold, setGold, formatInt, clamp } from './game/state.js';
-import { createShop, getUnlockedItems, tryBuy, computeShopTier } from './game/shop.js';
+import { createShop, getUnlockedItems, tryBuy, computeShopTier, getItemById } from './game/shop.js';
 import { createLoop } from './game/loop.js';
 import { loadSave, saveNow, hardReset, applyOfflineEarnings } from './game/save.js';
 import { createSceneRenderer } from './render/scene.js';
@@ -34,6 +34,12 @@ if (saved) {
 
 const scene = createSceneRenderer();
 const lobster = createLobster();
+
+// Restore scene effects from owned items on load
+for (const id of shop.getOwned()) {
+  const item = getItemById(id);
+  if (item) scene.applyPurchase(item);
+}
 
 function openShop() {
   ui.panel.classList.remove('hidden');
@@ -104,6 +110,26 @@ ui.resetBtn.addEventListener('click', () => {
   hardReset();
   location.reload();
 });
+
+// If tab is hidden/minimized, browsers throttle timers & rAF.
+// Use offline earnings logic on visibility/focus to keep progression consistent.
+function syncOnReturn() {
+  const now = Date.now();
+  applyOfflineEarnings({ state, nowMs: now });
+  saveNow({ state, shop });
+  renderHUD();
+  if (!ui.panel.classList.contains('hidden')) renderShop();
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') {
+    saveNow({ state, shop });
+  } else {
+    syncOnReturn();
+  }
+});
+window.addEventListener('focus', syncOnReturn);
+window.addEventListener('blur', () => saveNow({ state, shop }));
 
 // Auto income: every 5s
 function tickIncome() {
